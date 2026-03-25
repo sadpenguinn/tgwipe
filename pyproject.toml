@@ -1,0 +1,18 @@
+[project]
+name = "tgwipe"
+version = "0.1.0"
+description = "CLI tool to delete your own Telegram messages in a specific chat"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.3.1",
+    "python-dotenv>=1.2.2",
+    "rich>=14.3.3",
+    "telethon>=1.42.0",
+]
+
+[project.scripts]
+tgwipe = "tgwipe.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
