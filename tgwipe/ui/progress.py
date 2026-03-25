@@ -13,25 +13,38 @@ console = Console()
 
 
 class ProgressTracker:
-    """Displays real-time deletion progress with a Rich progress bar."""
+    """Displays real-time progress with a Rich progress bar."""
 
-    def __init__(self, dry_run: bool = False) -> None:
+    def __init__(self, dry_run: bool = False, ai_filter: bool = False) -> None:
         self._progress = Progress(
             SpinnerColumn(),
             TextColumn("[bold blue]{task.description}"),
             BarColumn(),
             TaskProgressColumn(),
-            TextColumn("[dim]{task.fields[preview]}"),
+            TextColumn("[dim]{task.fields[status]}"),
             console=console,
         )
-        label = "Scanning messages (dry run)..." if dry_run else "Scanning and deleting messages..."
-        self._task_id = self._progress.add_task(label, total=None, preview="")
+        if dry_run:
+            label = "Scanning messages (dry run)..."
+        elif ai_filter:
+            label = "Scanning and analyzing messages..."
+        else:
+            label = "Scanning and deleting messages..."
 
-    def update(self, record: MessageRecord) -> None:
+        self._task_id = self._progress.add_task(label, total=None, status="")
+
+    def on_found(self, record: MessageRecord) -> None:
         self._progress.advance(self._task_id)
         self._progress.update(
             self._task_id,
-            preview=record.preview[:50] if record.preview else "",
+            status=record.preview[:50] if record.preview else "",
+        )
+
+    def on_analyzed(self, record: MessageRecord, is_dangerous: bool) -> None:
+        verdict = "[red]DELETE[/red]" if is_dangerous else "[green]safe[/green]"
+        self._progress.update(
+            self._task_id,
+            status=f"{verdict}  {record.preview[:40] if record.preview else ''}",
         )
 
     @contextmanager
@@ -40,7 +53,12 @@ class ProgressTracker:
             yield
 
 
-def print_result(result: DeletionResult, chat_id: int | str, dry_run: bool = False) -> None:
+def print_result(
+    result: DeletionResult,
+    chat_id: int | str,
+    dry_run: bool = False,
+    ai_filter: bool = False,
+) -> None:
     table = Table(show_header=False, box=None, padding=(0, 2))
     table.add_column(style="dim")
     table.add_column(style="bold")
@@ -51,11 +69,20 @@ def print_result(result: DeletionResult, chat_id: int | str, dry_run: bool = Fal
     if dry_run:
         table.add_row("Would delete", f"[yellow]{result.total_found}[/yellow]")
     else:
+        if ai_filter:
+            table.add_row("Flagged as dangerous", str(result.total_deleted + result.total_failed))
+            table.add_row("Skipped as safe", str(result.total_skipped))
         table.add_row("Deleted", f"[green]{result.total_deleted}[/green]")
         if result.total_failed:
             table.add_row("Failed", f"[red]{result.total_failed}[/red]")
 
-    title = "[bold]Dry run result[/bold]" if dry_run else "[bold]Result[/bold]"
+    if dry_run:
+        title = "[bold]Dry run result[/bold]"
+    elif ai_filter:
+        title = "[bold]AI filter result[/bold]"
+    else:
+        title = "[bold]Result[/bold]"
+
     console.print(Panel(table, title=title, expand=False))
 
 

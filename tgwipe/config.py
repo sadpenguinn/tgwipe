@@ -20,6 +20,14 @@ class Config:
     request_delay: float = 0.5
     # Number of message IDs to buffer before sending a delete request
     batch_size: int = 100
+    # API key from console.anthropic.com; required when --ai-filter is used
+    anthropic_api_key: str | None = None
+    # Number of messages sent to Claude in a single analysis request
+    ai_batch_size: int = 10
+    # Claude model used for analysis
+    ai_model: str = "claude-sonnet-4-6"
+    # System prompt for the AI filter; overrides the built-in default when set
+    ai_prompt: str | None = None
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -36,6 +44,10 @@ class Config:
             session_name=os.getenv("TGWIPE_SESSION_NAME", "tgwipe"),
             request_delay=float(os.getenv("TGWIPE_REQUEST_DELAY", "0.5")),
             batch_size=int(os.getenv("TGWIPE_BATCH_SIZE", "100")),
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            ai_batch_size=int(os.getenv("TGWIPE_AI_BATCH_SIZE", "10")),
+            ai_model=os.getenv("TGWIPE_AI_MODEL", "claude-sonnet-4-6"),
+            ai_prompt=os.getenv("TGWIPE_AI_PROMPT") or None,
         )
 
 

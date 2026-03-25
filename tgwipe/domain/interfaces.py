@@ -12,3 +12,7 @@ class MessageFetcher(Protocol):
 
 class MessageDeleter(Protocol):
     async def delete(self, chat_id: int | str, message_ids: list[int]) -> int: ...
+
+
+class MessageFilter(Protocol):
+    async def is_dangerous_batch(self, records: list[MessageRecord]) -> list[bool]: ...

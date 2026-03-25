@@ -2,6 +2,9 @@
 *.session
 *.session-journal
 
+# AI analysis cache (local only)
+.wipecache/
+
 # Local environment variables
 .env
 

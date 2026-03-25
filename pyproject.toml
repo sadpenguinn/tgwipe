@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "CLI tool to delete your own Telegram messages in a specific chat"
 requires-python = ">=3.13"
 dependencies = [
+    "anthropic>=0.86.0",
     "click>=8.3.1",
     "python-dotenv>=1.2.2",
     "rich>=14.3.3",
